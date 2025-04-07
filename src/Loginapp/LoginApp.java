@@ -25,7 +25,6 @@ public class LoginApp {
             return null;
         }
     }
-
     private static boolean validarUsuario(String correo, String contrasena) {
         String query = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
 
