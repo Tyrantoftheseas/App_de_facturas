@@ -1,4 +1,5 @@
 package Loginapp;
+import model.Cliente;
 import java.awt.*;
 import java.awt.event.*;
 import java.sql.*;
@@ -25,7 +26,8 @@ public class LoginApp {
             return null;
         }
     }
-    private static boolean validarUsuario(String correo, String contrasena) {
+
+    private static Cliente validarUsuario(String correo, String contrasena) {
         String query = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
 
         try (Connection conn = connect();
@@ -33,39 +35,103 @@ public class LoginApp {
             stmt.setString(1, correo);
             stmt.setString(2, contrasena);
             ResultSet rs = stmt.executeQuery();
-            return rs.next();
-        } catch (Exception e) {
+
+            if (rs.next()) {
+                // Crear objeto Cliente con los datos del usuario
+                Cliente cliente = new Cliente(
+                        rs.getInt("id"),
+                        rs.getString("nombre") + " " + rs.getString("apellido"),
+                        rs.getString("correo"),
+                        rs.getString("telefono") != null ? rs.getString("telefono") : "No disponible"
+                );
+
+                // Notificar login exitoso
+                notificarLoginExitoso(correo);
+
+                return cliente;
+            }
+            return null;
+        } catch (SQLException e) {
             e.printStackTrace();
-            return false;
+            return null;
         }
     }
 
-    private static void mostrarMenuPrincipal() {
+    private static void notificarLoginExitoso(String correo) {
+        model.Correo notificacion = new model.Correo(
+                correo,
+                "Inicio de sesión exitoso - Edutec",
+                "Se ha detectado un inicio de sesión en tu cuenta Edutec. " +
+                        "Si no fuiste tú, por favor contacta a soporte técnico."
+        );
+        notificacion.enviarNotificacion(notificacion);
+    }
+
+    // Modificar el método mostrarMenuPrincipal para recibir el cliente
+    private static void mostrarMenuPrincipal(Cliente cliente) {
         JFrame menuFrame = new JFrame("Panel Principal - Edutec");
         menuFrame.setSize(400, 300);
         menuFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        menuFrame.setLayout(new GridLayout(4, 1));
+        menuFrame.setLayout(new GridLayout(6, 1)); // Ajustado a 6 filas para todos los componentes
         menuFrame.getContentPane().setBackground(new Color(240, 240, 240));
+
+        // Añadir etiqueta de bienvenida con el nombre del cliente
+        JLabel lblBienvenida = new JLabel("Bienvenido/a, " + cliente.getNombre(), SwingConstants.CENTER);
+        lblBienvenida.setFont(new Font("Arial", Font.BOLD, 14));
 
         JButton btnGestionPagos = new JButton("Gestión de Pagos");
         JButton btnClientes = new JButton("Administrar Clientes");
+        JButton btnCursos = new JButton("Gestionar Cursos"); // Nuevo botón
         JButton btnHistorial = new JButton("Historial de Transacciones");
         JButton btnLogout = new JButton("Cerrar Sesión");
 
+        // Añadir ActionListener para el botón de Cursos
+        btnCursos.addActionListener(e -> mostrarGestionCursos(cliente));
+
+        // Añadir ActionListener para el botón de Gestión de Pagos
+        btnGestionPagos.addActionListener(e -> mostrarGestionPagos(cliente));
+
+        // Añadir ActionListener para el botón de Administrar Clientes
+        btnClientes.addActionListener(e -> mostrarAdministrarClientes(cliente));
+
+        // Añadir ActionListener para el botón de Historial
+        btnHistorial.addActionListener(e -> mostrarHistorialTransacciones(cliente));
+
         btnLogout.addActionListener(e -> {
             menuFrame.dispose();
-            // MODIFICACIÓN: Ahora llama al metodo mostrarLogin() en lugar de main()
             mostrarLogin();
         });
 
+        menuFrame.add(lblBienvenida);
         menuFrame.add(btnGestionPagos);
         menuFrame.add(btnClientes);
+        menuFrame.add(btnCursos);
         menuFrame.add(btnHistorial);
         menuFrame.add(btnLogout);
 
-        // MODIFICACIÓN: Se añadió esta línea para centrar la ventana
         menuFrame.setLocationRelativeTo(null);
         menuFrame.setVisible(true);
+    }
+
+    // Métodos para manejar las diferentes secciones (implementar según se necesite)
+    private static void mostrarGestionCursos(Cliente cliente) {
+        // TODO: Implementar la gestión de cursos
+        JOptionPane.showMessageDialog(null, "Funcionalidad de Gestión de Cursos en desarrollo");
+    }
+
+    private static void mostrarGestionPagos(Cliente cliente) {
+        // TODO: Implementar la gestión de pagos
+        JOptionPane.showMessageDialog(null, "Funcionalidad de Gestión de Pagos en desarrollo");
+    }
+
+    private static void mostrarAdministrarClientes(Cliente cliente) {
+        // TODO: Implementar la administración de clientes
+        JOptionPane.showMessageDialog(null, "Funcionalidad de Administrar Clientes en desarrollo");
+    }
+
+    private static void mostrarHistorialTransacciones(Cliente cliente) {
+        // TODO: Implementar el historial de transacciones
+        JOptionPane.showMessageDialog(null, "Funcionalidad de Historial de Transacciones en desarrollo");
     }
 
     // MODIFICACIÓN: Se extrajo la lógica de creación de la ventana de login a un metodo separado
@@ -122,9 +188,10 @@ public class LoginApp {
         loginFrame.add(lblMessage, gbc);
 
         btnLogin.addActionListener(e -> {
-            if (validarUsuario(txtUser.getText(), new String(txtPass.getPassword()))) {
+            Cliente cliente = validarUsuario(txtUser.getText(), new String(txtPass.getPassword()));
+            if (cliente != null) {
                 loginFrame.dispose();
-                mostrarMenuPrincipal();
+                mostrarMenuPrincipal(cliente);
             } else {
                 lblMessage.setText("Credenciales incorrectas");
                 lblMessage.setForeground(Color.RED);

@@ -1,11 +1,14 @@
 package model;
-
 public class Correo implements EmailNotificador {
     private String destinatario;
     private String asunto;
     private String mensaje;
 
     public Correo(String destinatario, String asunto, String mensaje) {
+        if (destinatario == null || destinatario.trim().isEmpty()) {
+            throw new IllegalArgumentException("El destinatario no puede estar vacio.");
+        }
+
         this.destinatario = destinatario;
         this.asunto = asunto;
         this.mensaje = mensaje;
@@ -25,5 +28,5 @@ public class Correo implements EmailNotificador {
     @Override
     public void enviarNotificacion(Correo correo) {
         enviarNotificacion(correo.getDestinatario(), correo.getAsunto(), correo.getMensaje());
-        }
     }
+}

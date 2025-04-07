@@ -1,3 +1,5 @@
+package App;
+
 import model.Correo;
 
 public class Main {

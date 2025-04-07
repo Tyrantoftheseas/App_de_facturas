@@ -29,4 +29,9 @@ public class Factura {
         }
         System.out.println("Total: $" + total);
     }
+
+    public int getId() {
+        return id;
+    }
+
 }
