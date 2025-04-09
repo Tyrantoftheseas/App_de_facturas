@@ -1,11 +1,12 @@
 package model;
-
-public class Cliente extends Persona implements User {
+public class Cliente extends Persona implements Usuario {
     private String telefono;
+    private String rol;  // Rol del usuario, puede ser "cliente" o algo más
 
     public Cliente(int id, String nombre, String correo, String telefono) {
         super(id, nombre, correo);
         this.telefono = telefono;
+        this.rol = "cliente";  // Role por defecto
     }
 
     @Override
@@ -14,18 +15,8 @@ public class Cliente extends Persona implements User {
     }
 
     @Override
-    public int getId() {
-        return id;
-    }
-
-    @Override
-    public String getNombre() {
-        return nombre;
-    }
-
-    @Override
-    public String getCorreo() {
-        return correo;
+    public String getRol() {
+        return rol;  // El rol de un cliente será siempre "cliente"
     }
 
     public String getTelefono() {

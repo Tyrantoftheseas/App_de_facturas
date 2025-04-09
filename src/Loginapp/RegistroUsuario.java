@@ -1,223 +1,161 @@
 package Loginapp;
-import java.awt.*;
-import java.awt.event.*;
-import java.sql.*;
-import javax.swing.*;
 
-/**
- * NUEVA CLASE: Implementa la funcionalidad de registro de usuarios.
- * Permite crear nuevos usuarios en la base de datos y tiene un diseño
- * coherente con la interfaz de login original.
- */
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.Instant;
+
+import static Loginapp.LoginApp.connect;
+
 public class RegistroUsuario extends JFrame {
 
-    // Componentes de la interfaz
-    private JTextField txtNombre;
-    private JTextField txtApellido;
-    private JTextField txtCorreo;
-    private JPasswordField txtPassword;
-    private JPasswordField txtConfirmPassword;
-    private JLabel lblMessage;
-
-    /**
-     * Constructor que crea la interfaz gráfica de registro
-     */
     public RegistroUsuario() {
-        setTitle("Registro de Usuario - Edutec");
-        setSize(400, 350);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setTitle("Registro de Usuario");
+        setSize(350, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridBagLayout());
-        // Se usa el mismo color de fondo que en LoginApp para mantener consistencia
-        getContentPane().setBackground(new Color(200, 220, 240));
-
+        getContentPane().setBackground(new Color(220, 240, 250));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(6, 6, 6, 6);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // NUEVOS COMPONENTES: Campos para el formulario de registro
+        // Campos del formulario
         JLabel lblNombre = new JLabel("Nombre:");
-        txtNombre = new JTextField(15);
+        JTextField txtNombre = new JTextField(15);
 
         JLabel lblApellido = new JLabel("Apellido:");
-        txtApellido = new JTextField(15);
+        JTextField txtApellido = new JTextField(15);
 
         JLabel lblCorreo = new JLabel("Correo:");
-        txtCorreo = new JTextField(15);
+        JTextField txtCorreo = new JTextField(15);
 
-        JLabel lblPassword = new JLabel("Contraseña:");
-        txtPassword = new JPasswordField(15);
+        JLabel lblContrasena = new JLabel("Contraseña:");
+        JPasswordField txtContrasena = new JPasswordField(15);
 
-        JLabel lblConfirmPassword = new JLabel("Confirmar Contraseña:");
-        txtConfirmPassword = new JPasswordField(15);
+        JLabel lblTelefono = new JLabel("Teléfono:");
+        JTextField txtTelefono = new JTextField(15);
 
-        JButton btnRegistrar = new JButton("Registrar Usuario");
+        JButton btnRegistrar = new JButton("Registrar");
         JButton btnCancelar = new JButton("Cancelar");
 
-        lblMessage = new JLabel("", SwingConstants.CENTER);
+        // Estilizar botones
+        btnRegistrar.setBackground(new Color(100, 180, 120));
+        btnRegistrar.setForeground(Color.BLACK);
 
-        // Estilo coherente con el botón de login
-        btnRegistrar.setBackground(new Color(100, 150, 200));
-        btnRegistrar.setForeground(Color.BLACK);  // Color de texto negro para mejor visibilidad
-        btnRegistrar.setFocusPainted(false);
-
-        // Estilo para el botón de cancelar
-        btnCancelar.setBackground(new Color(200, 200, 200));
+        btnCancelar.setBackground(new Color(180, 100, 100));
         btnCancelar.setForeground(Color.BLACK);
-        btnCancelar.setFocusPainted(false);
 
-        // Agregar componentes al layout
         gbc.gridx = 0; gbc.gridy = 0;
-        add(lblNombre, gbc);
-        gbc.gridx = 1;
+        add(lblNombre, gbc); gbc.gridx = 1;
         add(txtNombre, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
-        add(lblApellido, gbc);
-        gbc.gridx = 1;
+        gbc.gridx = 0; gbc.gridy++;
+        add(lblApellido, gbc); gbc.gridx = 1;
         add(txtApellido, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 2;
-        add(lblCorreo, gbc);
-        gbc.gridx = 1;
+        gbc.gridx = 0; gbc.gridy++;
+        add(lblCorreo, gbc); gbc.gridx = 1;
         add(txtCorreo, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 3;
-        add(lblPassword, gbc);
-        gbc.gridx = 1;
-        add(txtPassword, gbc);
+        gbc.gridx = 0; gbc.gridy++;
+        add(lblContrasena, gbc); gbc.gridx = 1;
+        add(txtContrasena, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 4;
-        add(lblConfirmPassword, gbc);
-        gbc.gridx = 1;
-        add(txtConfirmPassword, gbc);
+        gbc.gridx = 0; gbc.gridy++;
+        add(lblTelefono, gbc); gbc.gridx = 1;
+        add(txtTelefono, gbc);
 
-        // Panel para botones con diseño fluido
-        JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        panelBotones.setBackground(new Color(200, 220, 240));
-        panelBotones.add(btnRegistrar);
-        panelBotones.add(btnCancelar);
+        gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
+        add(btnRegistrar, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 2;
-        add(panelBotones, gbc);
+        gbc.gridy++;
+        add(btnCancelar, gbc);
 
-        gbc.gridy = 6;
-        add(lblMessage, gbc);
+        // Acción del botón Registrar
+        btnRegistrar.addActionListener((ActionEvent e) -> {
+            String nombre = txtNombre.getText().trim();
+            String apellido = txtApellido.getText().trim();
+            String correo = txtCorreo.getText().trim();
+            String contrasena = new String(txtContrasena.getPassword());
+            String telefono = txtTelefono.getText().trim();
 
-        // EVENTOS
-        btnRegistrar.addActionListener(e -> registrarUsuario());
+            // Validaciones básicas
+            if (nombre.isEmpty() || apellido.isEmpty() || correo.isEmpty() || contrasena.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Por favor complete todos los campos obligatorios.");
+                return;
+            }
 
-        btnCancelar.addActionListener(e -> {
-            dispose();  // Cerrar ventana de registro
-            // Volver a mostrar la ventana de login
-            LoginApp.mostrarLogin();
+            // Validar si el correo ya existe
+            if (correoExiste(correo)) {
+                JOptionPane.showMessageDialog(this, "El correo electrónico ya está registrado.");
+                return;
+            }
+
+            try (Connection conn = connect()) {
+                if (conn != null) {
+                    String insert = "INSERT INTO usuarios (nombre, apellido, correo, contrasena, telefono, ultimo_acceso) VALUES (?, ?, ?, ?, ?, ?)";
+                    try (PreparedStatement stmt = conn.prepareStatement(insert)) {
+                        stmt.setString(1, nombre);
+                        stmt.setString(2, apellido);
+                        stmt.setString(3, correo);
+                        stmt.setString(4, contrasena);
+                        stmt.setString(5, telefono);
+                        stmt.setTimestamp(6, java.sql.Timestamp.from(Instant.now()));
+                        stmt.executeUpdate();
+                    }
+
+                    // Notificación de registro
+                    String getUserId = "SELECT id FROM usuarios WHERE correo = ?";
+                    try (PreparedStatement stmt = conn.prepareStatement(getUserId)) {
+                        stmt.setString(1, correo);
+                        var rs = stmt.executeQuery();
+                        if (rs.next()) {
+                            int id = rs.getInt("id");
+                            LoginApp.registrarNotificacion(conn, id, "registro", "Registro exitoso", "Se ha registrado correctamente en la plataforma.");
+                        }
+                    }
+
+                    JOptionPane.showMessageDialog(this, "Registro exitoso. Puede iniciar sesión.");
+                    dispose();
+                    LoginApp.mostrarLogin(connect()); // Volver a login
+                } else {
+                    JOptionPane.showMessageDialog(this, "Error de conexión a la base de datos.");
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error al registrar el usuario: " + ex.getMessage());
+            }
         });
 
-        setLocationRelativeTo(null);  // Centrar la ventana
+        // Acción del botón Cancelar
+        btnCancelar.addActionListener(e -> {
+            dispose();
+            LoginApp.mostrarLogin(connect());
+        });
+
+        setLocationRelativeTo(null);
         setVisible(true);
     }
 
-    /**
-     * NUEVO MÉTODO: Valida los datos ingresados y registra al usuario en la base de datos
-     */
-    private void registrarUsuario() {
-        // Obtener valores de los campos
-        String nombre = txtNombre.getText().trim();
-        String apellido = txtApellido.getText().trim();
-        String correo = txtCorreo.getText().trim();
-        String password = new String(txtPassword.getPassword());
-        String confirmPassword = new String(txtConfirmPassword.getPassword());
+    // Método para verificar si el correo ya está registrado
+    private boolean correoExiste(String correo) {
+        String query = "SELECT id FROM usuarios WHERE correo = ?";
 
-        // Validaciones básicas
-        if (nombre.isEmpty() || apellido.isEmpty() || correo.isEmpty() || password.isEmpty()) {
-            mostrarMensaje("Todos los campos son obligatorios", Color.RED);
-            return;
-        }
-
-        if (!password.equals(confirmPassword)) {
-            mostrarMensaje("Las contraseñas no coinciden", Color.RED);
-            return;
-        }
-
-        if (!correo.contains("@") || !correo.contains(".")) {
-            mostrarMensaje("Correo electrónico inválido", Color.RED);
-            return;
-        }
-
-        // Verificar si el correo ya existe
-        if (usuarioExiste(correo)) {
-            mostrarMensaje("El correo ya está registrado", Color.RED);
-            return;
-        }
-
-        // Insertar en la base de datos
-        if (insertarUsuario(nombre, apellido, correo, password)) {
-            mostrarMensaje("Usuario registrado exitosamente", new Color(0, 150, 0));
-
-            // Limpiar campos después del registro exitoso
-            txtNombre.setText("");
-            txtApellido.setText("");
-            txtCorreo.setText("");
-            txtPassword.setText("");
-            txtConfirmPassword.setText("");
-
-            // Redirigir al login después de algunos segundos
-            Timer timer = new Timer(2000, e -> {
-                dispose();
-                LoginApp.mostrarLogin();
-            });
-            timer.setRepeats(false);
-            timer.start();
-        } else {
-            mostrarMensaje("Error al registrar usuario", Color.RED);
-        }
-    }
-
-    /**
-     * NUEVO MÉTODO: Verifica si ya existe un usuario con el correo proporcionado
-     */
-    private boolean usuarioExiste(String correo) {
-        String query = "SELECT COUNT(*) FROM usuarios WHERE correo = ?";
-
-        try (Connection conn = LoginApp.connect();  // Usa la conexión de LoginApp
+        try (Connection conn = connect();
              PreparedStatement stmt = conn.prepareStatement(query)) {
+
             stmt.setString(1, correo);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+
+            try (var rs = stmt.executeQuery()) {
+                return rs.next();  // Si ya existe un correo, retornará true
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (SQLException e) {
+            System.err.println("Error al verificar existencia de correo: " + e.getMessage());
         }
 
-        return false;
-    }
-
-    /**
-     * NUEVO MÉTODO: Inserta un nuevo usuario en la base de datos
-     */
-    private boolean insertarUsuario(String nombre, String apellido, String correo, String password) {
-        String query = "INSERT INTO usuarios (nombre, apellido, correo, contrasena) VALUES (?, ?, ?, ?)";
-
-        try (Connection conn = LoginApp.connect();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, nombre);
-            stmt.setString(2, apellido);
-            stmt.setString(3, correo);
-            stmt.setString(4, password);
-
-            int filasAfectadas = stmt.executeUpdate();
-            return filasAfectadas > 0;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    /**
-     * NUEVO MÉTODO: Muestra un mensaje en la interfaz con el color especificado
-     */
-    private void mostrarMensaje(String mensaje, Color color) {
-        lblMessage.setText(mensaje);
-        lblMessage.setForeground(color);
+        return false;  // Retorna false si no se encuentra el correo
     }
 }

@@ -1,5 +1,4 @@
 package model;
-
 public abstract class Persona {
     protected int id;
     protected String nombre;
@@ -10,12 +9,20 @@ public abstract class Persona {
         this.nombre = nombre;
         this.correo = correo;
     }
-    //metodo abstracto
+
     public abstract void mostrarInfo();
 
-    public int getId() { return id; }
-    public String getNombre() { return nombre; }
-    public String getCorreo() { return correo; }
+    public int getId() {
+        return id;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
 }
 
 

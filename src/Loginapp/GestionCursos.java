@@ -7,7 +7,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class GestionCursos {
-    // Método para mostrar la gestión de cursos
+    // Metodo para mostrar la gestión de cursos
     public static void mostrarGestionCursos(Cliente cliente) {
         JFrame cursosFrame = new JFrame("Gestión de Cursos - Edutec");
         cursosFrame.setSize(500, 400);
