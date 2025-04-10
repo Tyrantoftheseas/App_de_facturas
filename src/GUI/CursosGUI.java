@@ -75,10 +75,20 @@ public class CursosGUI extends JFrame {
             Curso programacion = new Curso(1, "Programación Java", 299.99);
             Curso diseno = new Curso(2, "Diseño UX/UI", 249.99);
             Curso marketing = new Curso(3, "Marketing Digital", 199.99);
+            Curso dataScience = new Curso(4, "Ciencia de Datos", 349.99);
+            Curso ciberseguridad = new Curso(5, "Ciberseguridad", 399.99);
+            Curso inteligenciaArtificial = new Curso(6, "Inteligencia Artificial", 499.99);
+            Curso blockchain = new Curso(7, "Blockchain", 599.99);
+            Curso Paquete_completo = new Curso(7, "Paquete_completo", 999.99);
 
             cursosDisponibles.add(programacion);
             cursosDisponibles.add(diseno);
             cursosDisponibles.add(marketing);
+            cursosDisponibles.add(dataScience);
+            cursosDisponibles.add(ciberseguridad);
+            cursosDisponibles.add(inteligenciaArtificial);
+            cursosDisponibles.add(blockchain);
+            cursosDisponibles.add(Paquete_completo);
         }
 
         // Llenar el modelo con los cursos disponibles

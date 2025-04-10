@@ -4,7 +4,7 @@ import model.Correo;
 import model.Curso;
 import model.Factura;
 import DAO.FacturaDAO;
-
+import Loginapp.GestionCursos;
 import javax.swing.*;
 import java.awt.*;
 
@@ -109,6 +109,5 @@ public class GestionFacturas {
         System.out.println("Factura generada y (intentando) guardada: #" + factura.getId() + " para " + cliente.getNombre());
     }
 
-    // El método para generar ID ahora estará en el DAO
-    // private static int generateFacturaId() { ... }
+
 }

@@ -10,7 +10,6 @@ import DAO.PagoDAO;
 
 import java.awt.*;
 import java.sql.*;
-import java.time.Instant;
 import javax.swing.*;
 
 public class LoginApp {
@@ -42,49 +41,83 @@ public class LoginApp {
         }
 
         loginFrame = new JFrame("Login Edutec");
-        loginFrame.setSize(350, 300);
+        loginFrame.setSize(400, 420);
         loginFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         loginFrame.setLayout(new GridBagLayout());
-        loginFrame.getContentPane().setBackground(new Color(200, 220, 240));
+        loginFrame.getContentPane().setBackground(Color.decode("#64e8e8"));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.WHITE);
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
+        ));
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints pgbc = new GridBagConstraints();
+        pgbc.insets = new Insets(10, 10, 10, 10);
+        pgbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel lblBienvenida = new JLabel("Inicia sesión en Edutec", SwingConstants.CENTER);
+        lblBienvenida.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblBienvenida.setForeground(new Color(33, 150, 243));
 
         JLabel lblUser = new JLabel("Correo:");
         JTextField txtUser = new JTextField(15);
+        lblUser.setFont(new Font("Times New Roman", Font.BOLD, 14));
+
         JLabel lblPass = new JLabel("Contraseña:");
         JPasswordField txtPass = new JPasswordField(15);
+        lblPass.setFont(new Font("Times New Roman", Font.BOLD, 14));
+
         JButton btnLogin = new JButton("Iniciar Sesión");
         JButton btnRegister = new JButton("Registrarse");
         JLabel lblMessage = new JLabel("", SwingConstants.CENTER);
 
-        btnLogin.setBackground(new Color(100, 150, 200));
-        btnLogin.setForeground(Color.BLACK);
+        Font fieldFont = new Font("Segoe UI", Font.PLAIN, 14);
+        txtUser.setFont(fieldFont);
+        txtPass.setFont(fieldFont);
+
+        btnLogin.setBackground(new Color(33, 150, 243));
+        btnLogin.setForeground(Color.BLUE);
+        btnLogin.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnLogin.setFocusPainted(false);
 
-        btnRegister.setBackground(new Color(120, 170, 220));
-        btnRegister.setForeground(Color.BLACK);
+        btnRegister.setBackground(new Color(100, 181, 246));
+        btnRegister.setForeground(Color.BLUE);
+        btnRegister.setFont(new Font("Segoe UI", Font.BOLD, 14));
         btnRegister.setFocusPainted(false);
 
+        lblMessage.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        pgbc.gridx = 0; pgbc.gridy = 0; pgbc.gridwidth = 2;
+        panel.add(lblBienvenida, pgbc);
+
+        pgbc.gridy++;
+        panel.add(lblUser, pgbc);
+        pgbc.gridy++;
+        panel.add(txtUser, pgbc);
+
+        pgbc.gridy++;
+        panel.add(lblPass, pgbc);
+        pgbc.gridy++;
+        panel.add(txtPass, pgbc);
+
+        pgbc.gridy++;
+        panel.add(btnLogin, pgbc);
+
+        pgbc.gridy++;
+        panel.add(btnRegister, pgbc);
+
+        pgbc.gridy++;
+        panel.add(lblMessage, pgbc);
+
         gbc.gridx = 0; gbc.gridy = 0;
-        loginFrame.add(lblUser, gbc);
-        gbc.gridx = 1;
-        loginFrame.add(txtUser, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 1;
-        loginFrame.add(lblPass, gbc);
-        gbc.gridx = 1;
-        loginFrame.add(txtPass, gbc);
-
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2;
-        loginFrame.add(btnLogin, gbc);
-
-        gbc.gridy = 3;
-        loginFrame.add(btnRegister, gbc);
-
-        gbc.gridy = 4;
-        loginFrame.add(lblMessage, gbc);
+        loginFrame.add(panel, gbc);
 
         btnLogin.addActionListener(e -> {
             Cliente cliente = validarUsuario(conn, txtUser.getText(), new String(txtPass.getPassword()));
@@ -112,10 +145,30 @@ public class LoginApp {
         menuFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         menuFrame.setLayout(new BorderLayout());
 
+        // Panel superior para encabezado
         JPanel headerPanel = new JPanel();
-        JPanel buttonPanel = new JPanel(new GridLayout(7, 1, 0, 15));
-        JPanel backgroundPanel = new JPanel();
+        headerPanel.setBackground(Color.decode("#64e8e8"));
+        headerPanel.setPreferredSize(new Dimension(600, 60));
+        JLabel titleLabel = new JLabel("Sistema de Gestión Edutec", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        titleLabel.setForeground(Color.BLUE);
+        headerPanel.add(titleLabel);
+
+        // Panel central con botones
+        JPanel backgroundPanel = new JPanel(new BorderLayout());
+        backgroundPanel.setBackground(Color.WHITE);
+
+        JPanel buttonPanel = new JPanel(new GridLayout(5, 1, 0, 15));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+
+        // Panel de pie de página
         JPanel footerPanel = new JPanel();
+        footerPanel.setBackground(Color.decode("#e0e0e0"));
+        footerPanel.setPreferredSize(new Dimension(600, 30));
+        JLabel userLabel = new JLabel("Usuario: " + cliente.getNombre(), SwingConstants.CENTER);
+        userLabel.setFont(new Font("Segoe UI", Font.ITALIC, 12));
+        footerPanel.add(userLabel);
 
         CursoDAO cursoDAO = new CursoDAO(conn);
         FacturaDAO facturaDAO = new FacturaDAO(conn);
@@ -124,29 +177,39 @@ public class LoginApp {
         GestionFacturas gestionFacturas = new GestionFacturas(facturaDAO);
         GestionCursos gestionCursos = new GestionCursos(conn, gestionFacturas);
 
+        // Estilo para botones
+        Font buttonFont = new Font("Segoe UI", Font.BOLD, 14);
+        Color buttonColor = new Color(33, 150, 243);
+        Color textColor = Color.WHITE;
+
         JButton btnGestionPagos = new JButton("Gestión de Pagos");
+        styleButton(btnGestionPagos, buttonFont, buttonColor, textColor);
         btnGestionPagos.addActionListener(e -> {
             PagosGUI pagosGUI = new PagosGUI(cliente, conn, pagoDAO);
             pagosGUI.setVisible(true);
         });
 
         JButton btnClientes = new JButton("Administrar Clientes");
+        styleButton(btnClientes, buttonFont, buttonColor, textColor);
         btnClientes.addActionListener(e -> JOptionPane.showMessageDialog(menuFrame,
                 "Funcionalidad de administración de clientes aún no implementada."));
 
         JButton btnCursos = new JButton("Gestionar Cursos");
+        styleButton(btnCursos, buttonFont, buttonColor, textColor);
         btnCursos.addActionListener(e -> {
             CursosGUI cursosGUI = new CursosGUI(conn, gestionFacturas, cliente);
             cursosGUI.setVisible(true);
         });
 
         JButton btnFacturas = new JButton("Gestionar Facturas");
+        styleButton(btnFacturas, buttonFont, buttonColor, textColor);
         btnFacturas.addActionListener(e -> {
             FacturasGUI facturasGUI = new FacturasGUI(cliente, facturaDAO);
             facturasGUI.setVisible(true);
         });
 
         JButton btnLogout = new JButton("Cerrar Sesión");
+        styleButton(btnLogout, buttonFont, new Color(244, 67, 54), textColor);
         btnLogout.addActionListener(e -> {
             menuFrame.dispose();
             mostrarLogin(conn);
@@ -165,6 +228,15 @@ public class LoginApp {
 
         menuFrame.setLocationRelativeTo(null);
         menuFrame.setVisible(true);
+    }
+
+    private static void styleButton(JButton button, Font font, Color bgColor, Color fgColor) {
+        button.setFont(font);
+        button.setBackground(bgColor);
+        button.setForeground(fgColor);
+        button.setFocusPainted(false);
+        button.setBorderPainted(false);
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
     public static Cliente validarUsuario(Connection conn, String correo, String contrasena) {
@@ -192,5 +264,18 @@ public class LoginApp {
             System.err.println("Error al validar usuario: " + e.getMessage());
         }
         return null;
+    }
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        SwingUtilities.invokeLater(() -> {
+            Connection conn = connect();
+            mostrarLogin(conn);
+        });
     }
 }

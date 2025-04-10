@@ -1,6 +1,7 @@
 package GUI;
 
 import model.Cliente;
+import model.Curso;
 import model.Factura;
 import DAO.FacturaDAO;
 
@@ -41,15 +42,14 @@ public class FacturasGUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tablaFacturas);
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        JButton btnVerDetalle = new JButton("Ver Detalle");
         JButton btnExportar = new JButton("Exportar a PDF");
         JButton btnVolver = new JButton("Volver");
 
-        btnVerDetalle.addActionListener(e -> verDetalleFactura());
+
         btnExportar.addActionListener(e -> exportarFactura());
         btnVolver.addActionListener(e -> dispose());
 
-        panelBotones.add(btnVerDetalle);
+
         panelBotones.add(btnExportar);
         panelBotones.add(btnVolver);
 
@@ -99,13 +99,44 @@ public class FacturasGUI extends JFrame {
                 JLabel lblId = new JLabel("ID Factura: " + factura.getId());
                 JLabel lblCliente = new JLabel("Cliente: " + cliente.getNombre());
                 JLabel lblFecha = new JLabel("Fecha: " + factura.getFechaCreacion());
+
+                // Sección de cursos - adaptada para usar getDescripcion()
+                JLabel lblCursosTitulo = new JLabel("Cursos adquiridos:", SwingConstants.LEFT);
+                lblCursosTitulo.setFont(new Font("Arial", Font.BOLD, 14));
+
+                // Panel para la lista de cursos
+                JPanel panelCursos = new JPanel();
+                panelCursos.setLayout(new BoxLayout(panelCursos, BoxLayout.Y_AXIS));
+                panelCursos.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+                panelCursos.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+                // Obtener los cursos asociados a la factura
+                List<Curso> cursosFactura = facturaDAO.obtenerCursosPorFactura(factura.getId());
+
+                if (cursosFactura != null && !cursosFactura.isEmpty()) {
+                    for (Curso curso : cursosFactura) {
+                        // Usamos getDescripcion() y getPrecio() de la clase Curso
+                        JLabel lblCurso = new JLabel("• " + curso.getDescripcion() + " - $" + curso.calcularPrecio());
+                        panelCursos.add(lblCurso);
+                        panelCursos.add(Box.createRigidArea(new Dimension(0, 5)));
+                    }
+                } else {
+                    JLabel lblNoCursos = new JLabel("No hay información de cursos disponible");
+                    panelCursos.add(lblNoCursos);
+                }
+
                 JLabel lblTotal = new JLabel("Total: $" + factura.getTotal());
+                lblTotal.setFont(new Font("Arial", Font.BOLD, 14));
 
                 panelDetalle.add(lblTitulo);
                 panelDetalle.add(Box.createRigidArea(new Dimension(0, 20)));
                 panelDetalle.add(lblId);
                 panelDetalle.add(lblCliente);
                 panelDetalle.add(lblFecha);
+                panelDetalle.add(Box.createRigidArea(new Dimension(0, 15)));
+                panelDetalle.add(lblCursosTitulo);
+                panelDetalle.add(panelCursos);
+                panelDetalle.add(Box.createRigidArea(new Dimension(0, 10)));
                 panelDetalle.add(lblTotal);
 
                 JButton btnCerrar = new JButton("Cerrar");

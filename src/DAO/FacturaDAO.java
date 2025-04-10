@@ -122,24 +122,37 @@ public class FacturaDAO {
         }
         return null;
     }
-    public List<Curso> obtenerCursosPorFactura(int facturaId) {
+    public List<Curso> obtenerCursosPorFactura(int idFactura) {
         List<Curso> cursos = new ArrayList<>();
-        String query = "SELECT c.id, c.nombre, c.precio FROM factura_items fi " +
-                "JOIN cursos c ON fi.curso_id = c.id WHERE fi.factura_id = ?";
+        String sql = "SELECT c.id, c.nombre, items.precio_unitario as precio " +
+                "FROM cursos c " +
+                "JOIN items_factura items ON c.id = items.curso_id " +
+                "WHERE items.factura_id = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(query)) {
-            stmt.setInt(1, facturaId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Curso curso = new Curso(rs.getInt("id"), rs.getString("nombre"), rs.getDouble("precio"));
-                    cursos.add(curso);
-                }
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, idFactura);
+            ResultSet rs = stmt.executeQuery();
+
+            // Depuración
+            System.out.println("Buscando cursos para factura ID: " + idFactura);
+            System.out.println("SQL ejecutado: " + sql.replace("?", String.valueOf(idFactura)));
+
+            while (rs.next()) {
+                Curso curso = new Curso(
+                        rs.getInt("id"),
+                        rs.getString("nombre"),
+                        rs.getDouble("precio")
+                );
+                System.out.println("Curso encontrado: " + curso.getDescripcion() + " - Precio: " + curso.calcularPrecio());
+                cursos.add(curso);
             }
+
+            System.out.println("Total cursos encontrados: " + cursos.size());
         } catch (SQLException e) {
             System.err.println("Error al obtener cursos de la factura: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return cursos;
     }
-
 }

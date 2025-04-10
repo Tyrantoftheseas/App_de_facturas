@@ -28,6 +28,18 @@ public class CursoDAO {
         }
         return cursos;
     }
+    public List<Curso> obtenerCursosPorIds(List<Integer> idsCursos) {
+        List<Curso> cursosSeleccionados = new ArrayList<>();
+        List<Curso> todosLosCursos = obtenerTodosCursos(); // Método existente que devuelve todos los cursos.
+
+        for (Curso curso : todosLosCursos) {
+            if (idsCursos.contains(curso.getId())) {
+                cursosSeleccionados.add(curso);
+            }
+        }
+
+        return cursosSeleccionados;
+    }
 
     // Otros métodos para obtener un curso por ID, añadir un nuevo curso (si fuera necesario), etc.
 }

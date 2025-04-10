@@ -47,14 +47,12 @@ public class PagosGUI extends JFrame {
 
         JPanel panelBotones = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         JButton btnNuevoPago = new JButton("Nuevo Pago");
-        JButton btnDetalle = new JButton("Ver Detalle");
         JButton btnVolver = new JButton("Volver");
 
         btnNuevoPago.addActionListener(e -> mostrarVentanaNuevoPago());
         btnVolver.addActionListener(e -> dispose());
 
         panelBotones.add(btnNuevoPago);
-        panelBotones.add(btnDetalle);
         panelBotones.add(btnVolver);
 
         add(panelTitulo, BorderLayout.NORTH);
