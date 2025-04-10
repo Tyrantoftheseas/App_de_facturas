@@ -1,14 +1,25 @@
 package Loginapp;
 import model.Cliente;
 import model.Curso;
+import DAO.CursoDAO; // Importa el DAO
+import Loginapp.GestionFacturas; // Asegúrate de que la importación sea correcta
+import java.sql.Connection;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 
 public class GestionCursos {
-    // Metodo para mostrar la gestión de cursos
-    public static void mostrarGestionCursos(Cliente cliente) {
+    private final CursoDAO cursoDAO;
+    private final GestionFacturas gestionFacturas;
+
+    public GestionCursos(Connection connection, GestionFacturas gestionFacturas) {
+        this.cursoDAO = new CursoDAO(connection);
+        this.gestionFacturas = gestionFacturas;
+    }
+
+    public void mostrarGestionCursos(Cliente cliente) {
         JFrame cursosFrame = new JFrame("Gestión de Cursos - Edutec");
         cursosFrame.setSize(500, 400);
         cursosFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -19,17 +30,29 @@ public class GestionCursos {
         JLabel titleLabel = new JLabel("Cursos Disponibles", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
 
-        // Simulación de cursos (en una aplicación real, estos vendrían de la base de datos)
+        // Obtener los cursos desde la base de datos usando el DAO
+        List<Curso> cursosDisponibles = cursoDAO.obtenerTodosCursos();
         DefaultListModel<String> modeloCursos = new DefaultListModel<>();
 
-        // Crear algunos cursos de ejemplo
-        Curso programacion = new Curso(1, "Programación Java", 299.99);
-        Curso diseno = new Curso(2, "Diseño UX/UI", 249.99);
-        Curso marketing = new Curso(3, "Marketing Digital", 199.99);
+        // Si la base de datos está vacía o hay un problema,
+        // puedes usar los cursos de ejemplo como respaldo (opcional)
+        if (cursosDisponibles.isEmpty()) {
+            // Crear algunos cursos de ejemplo (ESTOS SON LOS QUE PEDISTE)
+            Curso programacion = new Curso(1, "Programación Java", 299.99);
+            Curso diseno = new Curso(2, "Diseño UX/UI", 249.99);
+            Curso marketing = new Curso(3, "Marketing Digital", 199.99);
 
-        modeloCursos.addElement(programacion.getNombre() + " - $" + programacion.getPrecio());
-        modeloCursos.addElement(diseno.getNombre() + " - $" + diseno.getPrecio());
-        modeloCursos.addElement(marketing.getNombre() + " - $" + marketing.getPrecio());
+            modeloCursos.addElement(programacion.getNombre() + " - $" + programacion.getPrecio());
+            modeloCursos.addElement(diseno.getNombre() + " - $" + diseno.getPrecio());
+            modeloCursos.addElement(marketing.getNombre() + " - $" + marketing.getPrecio());
+            cursosDisponibles.add(programacion); // Añadir a la lista para usar en el evento
+            cursosDisponibles.add(diseno);
+            cursosDisponibles.add(marketing);
+        } else {
+            for (Curso curso : cursosDisponibles) {
+                modeloCursos.addElement(curso.getNombre() + " - $" + curso.getPrecio());
+            }
+        }
 
         JList<String> listaCursos = new JList<>(modeloCursos);
         JScrollPane scrollPane = new JScrollPane(listaCursos);
@@ -48,16 +71,8 @@ public class GestionCursos {
         btnInscribir.addActionListener(e -> {
             int selectedIndex = listaCursos.getSelectedIndex();
             if (selectedIndex != -1) {
-                Curso cursoSeleccionado = null;
-                switch (selectedIndex) {
-                    case 0: cursoSeleccionado = programacion; break;
-                    case 1: cursoSeleccionado = diseno; break;
-                    case 2: cursoSeleccionado = marketing; break;
-                }
-
-                if (cursoSeleccionado != null) {
-                    GestionFacturas.generarFactura(cliente, cursoSeleccionado);
-                }
+                Curso cursoSeleccionado = cursosDisponibles.get(selectedIndex);
+                gestionFacturas.generarFactura(cliente, cursoSeleccionado);
             } else {
                 JOptionPane.showMessageDialog(cursosFrame,
                         "Por favor, seleccione un curso primero",

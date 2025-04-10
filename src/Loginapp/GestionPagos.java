@@ -1,43 +1,70 @@
 package Loginapp;
-import model.Cliente;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
+import DAO.PagoDAO;
+import DAO.FacturaDAO;
+import model.Cliente;
+import model.Pago;
+import model.Factura;
+
+import java.sql.Connection;
+import java.util.List;
 
 public class GestionPagos {
-    // Metodo para mostrar la gestión de pagos
-    public static void mostrarGestionPagos(Cliente cliente) {
-        JFrame pagosFrame = new JFrame("Gestión de Pagos - Edutec");
-        pagosFrame.setSize(500, 400);
-        pagosFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        pagosFrame.setLayout(new BorderLayout());
+    private final PagoDAO pagoDAO;
+    private final FacturaDAO facturaDAO;
+    private final Cliente cliente;
+    private final Connection conn;
 
-        JPanel panelInfo = new JPanel(new GridLayout(2, 1));
-        JLabel lblCliente = new JLabel("Cliente: " + cliente.getNombre(), SwingConstants.CENTER);
-        lblCliente.setFont(new Font("Arial", Font.BOLD, 14));
+    public GestionPagos(Cliente cliente, Connection conn, PagoDAO pagoDAO) {
+        this.cliente = cliente;
+        this.conn = conn;
+        this.pagoDAO = pagoDAO;
+        this.facturaDAO = new FacturaDAO(conn); // Inicializar FacturaDAO
+    }
 
-        JLabel lblInstrucciones = new JLabel("Seleccione un método de pago:", SwingConstants.CENTER);
+    // Registrar un pago simple con factura automática
+    public void registrarPago(double monto, String metodo) {
+        // Crear y guardar la factura primero
+        Factura factura = new Factura(0, cliente);
+        factura.setTotal(monto);
 
-        panelInfo.add(lblCliente);
-        panelInfo.add(lblInstrucciones);
+        // Guardar factura en la base de datos
+        facturaDAO.guardarFactura(factura);
 
-        JPanel panelOpciones = new JPanel(new GridLayout(3, 1, 10, 10));
-        panelOpciones.setBorder(BorderFactory.createEmptyBorder(20, 50, 20, 50));
+        // Verificar si la factura se guardó correctamente
+        if (factura.getId() > 0) {
+            // Ahora registrar el pago con el ID de la factura
+            Pago pago = new Pago();
+            pago.setCliente(cliente);
+            pago.setMonto(monto);
+            pago.setMetodo(metodo);
+            pago.setFacturaId(factura.getId());
 
-        JButton btnTarjeta = new JButton("Pago con Tarjeta");
-        JButton btnTransferencia = new JButton("Transferencia Bancaria");
-        JButton btnVolver = new JButton("Volver");
+            pagoDAO.registrarPagoConFactura(pago);
+            System.out.println("Pago registrado exitosamente con factura ID: " + factura.getId());
+        } else {
+            System.err.println("No se pudo crear la factura, el pago no se registrará");
+        }
+    }
 
-        panelOpciones.add(btnTarjeta);
-        panelOpciones.add(btnTransferencia);
-        panelOpciones.add(btnVolver);
+    // Registrar un pago con una factura asociada existente
+    public void registrarPagoConFactura(Pago pago) {
+        pagoDAO.registrarPagoConFactura(pago);
+    }
 
-        btnVolver.addActionListener(e -> pagosFrame.dispose());
+    // Obtener historial de pagos del cliente
+    public List<Pago> obtenerHistorialPagos() {
+        return pagoDAO.obtenerHistorialPagosPorCliente(cliente);
+    }
 
-        pagosFrame.add(panelInfo, BorderLayout.NORTH);
-        pagosFrame.add(panelOpciones, BorderLayout.CENTER);
-        pagosFrame.setLocationRelativeTo(null);
-        pagosFrame.setVisible(true);
+    // Método usado por PagosGUI para obtener los pagos
+    public List<Pago> obtenerPagosPorCliente(Cliente cliente) {
+        return pagoDAO.obtenerHistorialPagosPorCliente(cliente);
+    }
+
+    // Método usado por PagosGUI para guardar un nuevo pago
+    public void guardarPago(Cliente cliente, double monto, String metodoPago) {
+        // Este método ahora generará una factura automáticamente
+        registrarPago(monto, metodoPago);
     }
 }

@@ -3,21 +3,31 @@ import model.Cliente;
 import model.Correo;
 import model.Curso;
 import model.Factura;
+import DAO.FacturaDAO;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class GestionFacturas {
+    private final FacturaDAO facturaDAO;
+
+    public GestionFacturas(FacturaDAO facturaDAO) {
+        this.facturaDAO = facturaDAO;
+    }
+
     // Método para generar una factura
-    public static void generarFactura(Cliente cliente, Curso item) {
+    public void generarFactura(Cliente cliente, Curso item) {
         JFrame facturaFrame = new JFrame("Factura - Edutec");
         facturaFrame.setSize(400, 500);
         facturaFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         facturaFrame.setLayout(new BorderLayout());
 
-        // Crear una factura real
-        Factura factura = new Factura(generateFacturaId(), cliente);
-        factura.agregarItem(item);
+// En tu clase de gestión de facturas (ej., GestionFacturas.java)
+        Factura factura = new Factura(0, cliente);
+        factura.agregarItem(item); // Agrega el ítem a la factura
+
+// Guardar la factura completa (con sus ítems)
+        facturaDAO.guardarFactura(factura);
 
         // Panel para mostrar la información de la factura
         JPanel panelFactura = new JPanel();
@@ -95,12 +105,10 @@ public class GestionFacturas {
         facturaFrame.setLocationRelativeTo(null);
         facturaFrame.setVisible(true);
 
-        // Registrar la transacción en la base de datos (simulado)
-        System.out.println("Factura generada: #" + factura.getId() + " para " + cliente.getNombre());
+        // Ya no necesitas la simulación aquí, el DAO se encarga
+        System.out.println("Factura generada y (intentando) guardada: #" + factura.getId() + " para " + cliente.getNombre());
     }
 
-    // Método para generar un ID de factura (simulado)
-    private static int generateFacturaId() {
-        return (int)(Math.random() * 10000) + 1000;
-    }
+    // El método para generar ID ahora estará en el DAO
+    // private static int generateFacturaId() { ... }
 }

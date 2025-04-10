@@ -1,6 +1,13 @@
 package Loginapp;
 
+import GUI.CursosGUI;
+import GUI.FacturasGUI;
+import GUI.PagosGUI;
 import model.Cliente;
+import DAO.CursoDAO;
+import DAO.FacturaDAO;
+import DAO.PagoDAO;
+
 import java.awt.*;
 import java.sql.*;
 import java.time.Instant;
@@ -11,6 +18,11 @@ public class LoginApp {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/edutec_db";
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "root";
+    private final Connection connection;
+
+    public LoginApp(Connection connection) {
+        this.connection = connection;
+    }
 
     public static Connection connect() {
         try {
@@ -19,75 +31,6 @@ public class LoginApp {
         } catch (ClassNotFoundException | SQLException e) {
             System.err.println("Error al conectar: " + e.getMessage());
             return null;
-        }
-    }
-    public static void registrarNotificacion(Connection conn, int usuarioId, String tipo, String asunto, String mensaje) {
-        String query = "INSERT INTO notificaciones (usuario_id, tipo, asunto, mensaje, fecha_envio) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setString(2, tipo);
-            stmt.setString(3, asunto);
-            stmt.setString(4, mensaje);
-            stmt.setTimestamp(5, java.sql.Timestamp.from(Instant.now()));
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error al registrar notificación: " + e.getMessage());
-        }
-    }
-
-    public static Cliente validarUsuario(Connection conn, String correo, String contrasena) {
-        if (correo == null || contrasena == null || correo.isEmpty() || contrasena.isEmpty()) {
-            System.err.println("Correo o contraseña vacíos.");
-            return null;
-        }
-
-        String query = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, correo);
-            stmt.setString(2, contrasena);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                int id = rs.getInt("id");
-
-                actualizarUltimoAcceso(conn, id);
-                notificarLoginExitoso(conn, id);
-
-                return new Cliente(
-                        id,
-                        rs.getString("nombre") + " " + rs.getString("apellido"),
-                        correo,
-                        rs.getString("telefono") != null ? rs.getString("telefono") : "No disponible"
-                );
-            }
-        } catch (SQLException e) {
-            System.err.println("Error al validar usuario: " + e.getMessage());
-        }
-        return null;
-    }
-
-    private static void actualizarUltimoAcceso(Connection conn, int usuarioId) {
-        String query = "UPDATE usuarios SET ultimo_acceso = ? WHERE id = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setTimestamp(1, Timestamp.from(Instant.now()));
-            stmt.setInt(2, usuarioId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error al actualizar último acceso: " + e.getMessage());
-        }
-    }
-
-    private static void notificarLoginExitoso(Connection conn, int usuarioId) {
-        String query = "INSERT INTO notificaciones (usuario_id, tipo, asunto, mensaje, fecha_envio) VALUES (?, ?, ?, ?, ?)";
-        try (PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setInt(1, usuarioId);
-            stmt.setString(2, "login");
-            stmt.setString(3, "Inicio de sesión exitoso");
-            stmt.setString(4, "Se ha detectado un inicio de sesión exitoso en su cuenta.");
-            stmt.setTimestamp(5, Timestamp.from(Instant.now()));
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            System.err.println("Error al registrar notificación: " + e.getMessage());
         }
     }
 
@@ -147,7 +90,7 @@ public class LoginApp {
             Cliente cliente = validarUsuario(conn, txtUser.getText(), new String(txtPass.getPassword()));
             if (cliente != null) {
                 loginFrame.dispose();
-                mostrarMenuPrincipal(cliente);
+                mostrarMenuPrincipal(cliente, conn);
             } else {
                 lblMessage.setText("Credenciales incorrectas");
                 lblMessage.setForeground(Color.RED);
@@ -156,79 +99,98 @@ public class LoginApp {
 
         btnRegister.addActionListener(e -> {
             loginFrame.setVisible(false);
-            new RegistroUsuario(); // La conexión se maneja allá
+            new RegistroUsuario(conn); // Pasar la conexión al registro
         });
 
         loginFrame.setLocationRelativeTo(null);
         loginFrame.setVisible(true);
     }
 
-    private static void mostrarMenuPrincipal(Cliente cliente) {
+    private static void mostrarMenuPrincipal(Cliente cliente, Connection conn) {
         JFrame menuFrame = new JFrame("Panel Principal - Edutec");
-        menuFrame.setSize(400, 300);
+        menuFrame.setSize(600, 500);
         menuFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        menuFrame.setLayout(new GridLayout(6, 1));
-        menuFrame.getContentPane().setBackground(new Color(240, 240, 240));
+        menuFrame.setLayout(new BorderLayout());
 
-        JLabel lblBienvenida = new JLabel("Bienvenido/a, " + cliente.getNombre(), SwingConstants.CENTER);
-        lblBienvenida.setFont(new Font("Arial", Font.BOLD, 14));
+        JPanel headerPanel = new JPanel();
+        JPanel buttonPanel = new JPanel(new GridLayout(7, 1, 0, 15));
+        JPanel backgroundPanel = new JPanel();
+        JPanel footerPanel = new JPanel();
+
+        CursoDAO cursoDAO = new CursoDAO(conn);
+        FacturaDAO facturaDAO = new FacturaDAO(conn);
+        PagoDAO pagoDAO = new PagoDAO(conn);
+
+        GestionFacturas gestionFacturas = new GestionFacturas(facturaDAO);
+        GestionCursos gestionCursos = new GestionCursos(conn, gestionFacturas);
 
         JButton btnGestionPagos = new JButton("Gestión de Pagos");
-        JButton btnClientes = new JButton("Administrar Clientes");
-        JButton btnCursos = new JButton("Gestionar Cursos");
-        JButton btnHistorial = new JButton("Historial de Transacciones");
-        JButton btnLogout = new JButton("Cerrar Sesión");
-
-        btnCursos.addActionListener(e -> mostrarGestionCursos(cliente));
-        btnGestionPagos.addActionListener(e -> mostrarGestionPagos(cliente));
-        btnClientes.addActionListener(e -> mostrarAdministrarClientes(cliente));
-        btnHistorial.addActionListener(e -> mostrarHistorialTransacciones(cliente));
-        btnLogout.addActionListener(e -> {
-            menuFrame.dispose();
-            mostrarLogin(connect()); // Reconectar
+        btnGestionPagos.addActionListener(e -> {
+            PagosGUI pagosGUI = new PagosGUI(cliente, conn, pagoDAO);
+            pagosGUI.setVisible(true);
         });
 
-        menuFrame.add(lblBienvenida);
-        menuFrame.add(btnGestionPagos);
-        menuFrame.add(btnClientes);
-        menuFrame.add(btnCursos);
-        menuFrame.add(btnHistorial);
-        menuFrame.add(btnLogout);
+        JButton btnClientes = new JButton("Administrar Clientes");
+        btnClientes.addActionListener(e -> JOptionPane.showMessageDialog(menuFrame,
+                "Funcionalidad de administración de clientes aún no implementada."));
+
+        JButton btnCursos = new JButton("Gestionar Cursos");
+        btnCursos.addActionListener(e -> {
+            CursosGUI cursosGUI = new CursosGUI(conn, gestionFacturas, cliente);
+            cursosGUI.setVisible(true);
+        });
+
+        JButton btnFacturas = new JButton("Gestionar Facturas");
+        btnFacturas.addActionListener(e -> {
+            FacturasGUI facturasGUI = new FacturasGUI(cliente, facturaDAO);
+            facturasGUI.setVisible(true);
+        });
+
+        JButton btnLogout = new JButton("Cerrar Sesión");
+        btnLogout.addActionListener(e -> {
+            menuFrame.dispose();
+            mostrarLogin(conn);
+        });
+
+        buttonPanel.add(btnGestionPagos);
+        buttonPanel.add(btnClientes);
+        buttonPanel.add(btnCursos);
+        buttonPanel.add(btnFacturas);
+        buttonPanel.add(btnLogout);
+
+        backgroundPanel.add(buttonPanel, BorderLayout.CENTER);
+        menuFrame.add(headerPanel, BorderLayout.NORTH);
+        menuFrame.add(backgroundPanel, BorderLayout.CENTER);
+        menuFrame.add(footerPanel, BorderLayout.SOUTH);
 
         menuFrame.setLocationRelativeTo(null);
         menuFrame.setVisible(true);
     }
 
-    private static void mostrarGestionCursos(Cliente cliente) {
-        JOptionPane.showMessageDialog(null, "Funcionalidad de Gestión de Cursos en desarrollo");
-    }
-
-    private static void mostrarGestionPagos(Cliente cliente) {
-        JOptionPane.showMessageDialog(null, "Funcionalidad de Gestión de Pagos en desarrollo");
-    }
-
-    private static void mostrarAdministrarClientes(Cliente cliente) {
-        JOptionPane.showMessageDialog(null, "Funcionalidad de Administrar Clientes en desarrollo");
-    }
-
-    private static void mostrarHistorialTransacciones(Cliente cliente) {
-        JOptionPane.showMessageDialog(null, "Funcionalidad de Historial de Transacciones en desarrollo");
-    }
-
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static Cliente validarUsuario(Connection conn, String correo, String contrasena) {
+        if (correo == null || contrasena == null || correo.isEmpty() || contrasena.isEmpty()) {
+            System.err.println("Correo o contraseña vacíos.");
+            return null;
         }
 
-        SwingUtilities.invokeLater(() -> {
-            Connection conn = connect();
-            if (conn != null) {
-                mostrarLogin(conn);
-            } else {
-                JOptionPane.showMessageDialog(null, "Error al conectar con la base de datos.", "Error", JOptionPane.ERROR_MESSAGE);
+        String query = "SELECT * FROM usuarios WHERE correo = ? AND contrasena = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, correo);
+            stmt.setString(2, contrasena);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                return new Cliente(
+                        id,
+                        rs.getString("nombre") + " " + rs.getString("apellido"),
+                        correo,
+                        rs.getString("telefono") != null ? rs.getString("telefono") : "No disponible"
+                );
             }
-        });
+        } catch (SQLException e) {
+            System.err.println("Error al validar usuario: " + e.getMessage());
+        }
+        return null;
     }
 }

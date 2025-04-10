@@ -12,7 +12,7 @@ import static Loginapp.LoginApp.connect;
 
 public class RegistroUsuario extends JFrame {
 
-    public RegistroUsuario() {
+    public RegistroUsuario(Connection conn) {
         setTitle("Registro de Usuario");
         setSize(350, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -94,7 +94,7 @@ public class RegistroUsuario extends JFrame {
                 return;
             }
 
-            try (Connection conn = connect()) {
+            try {
                 if (conn != null) {
                     String insert = "INSERT INTO usuarios (nombre, apellido, correo, contrasena, telefono, ultimo_acceso) VALUES (?, ?, ?, ?, ?, ?)";
                     try (PreparedStatement stmt = conn.prepareStatement(insert)) {
@@ -114,7 +114,6 @@ public class RegistroUsuario extends JFrame {
                         var rs = stmt.executeQuery();
                         if (rs.next()) {
                             int id = rs.getInt("id");
-                            LoginApp.registrarNotificacion(conn, id, "registro", "Registro exitoso", "Se ha registrado correctamente en la plataforma.");
                         }
                     }
 
